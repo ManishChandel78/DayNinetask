@@ -1,33 +1,45 @@
 import axios from "axios";
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 const DashBoard = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [data, setData] = useState([]);
-
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState([]);
+  const navigate = useNavigate();
+
   const fetchData = async () => {
-    console.log("hey");
     try {
       setIsLoading(true);
       const response = await axios.get("https://dummyjson.com/products");
       setData(response.data.products);
-
-      console.log(response);
+      setFilter(response.data.products);
       setTimeout(() => {
         setIsLoading(false);
       }, 4000);
     } catch (error) {
-      console.log(error);
+      console.error(error);
     }
   };
 
   const searchMovie = () => {
-    const Filter = data.filter((item) =>
-      item.title.toLowerCase().include(search.toLocaleLowerCase)
+    const filtered = data.filter((item) =>
+      item.title.toLowerCase().includes(search.toLowerCase())
     );
-    setFilter(Filter);
+    setFilter(filtered);
+  };
+
+  const deleteProducts = async (id) => {
+    try {
+      await axios.delete(`https://dummyjson.com/products/${id}`);
+
+      const updatedData = data.filter((item) => item.id !== id);
+      setData(updatedData);
+      setFilter(updatedData);
+    } catch (error) {
+      console.log(error);
+    }
   };
 
   useEffect(() => {
@@ -37,22 +49,35 @@ const DashBoard = () => {
   return (
     <>
       <h1 className="text-center py-2 mt-4 font-medium">
-        WelCome To DashBoard, here is your Products
+        Welcome To Dashboard, here are your Products
       </h1>
 
-      <input
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        type="text"
-        placeholder="Search by title"
-        className="my-3 ml-4 py-2 px-4 border-1  outline-neutral-500 rounded"
-      />
-      <button
-        onClick={searchMovie}
-        className="py-2 px-4 bg-gray-500 text-white mx-2 rounded"
-      >
-        Search
-      </button>
+      <div className="flex justify-between items-center px-4 mb-4">
+        <div className="flex items-center">
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            type="text"
+            placeholder="Search by title"
+            className="py-2 px-4 border outline-neutral-500 rounded"
+          />
+          <button
+            onClick={searchMovie}
+            className="py-2 px-4 bg-gray-700 text-white mx-2 rounded"
+          >
+            Search
+          </button>
+        </div>
+
+        <div>
+          <button
+            className="py-2 px-4 bg-gray-700 text-white rounded"
+            onClick={() => navigate("/profile")}
+          >
+            Profile
+          </button>
+        </div>
+      </div>
 
       {isLoading ? (
         <div className="flex items-center justify-center min-h-screen bg-gray-100">
@@ -62,7 +87,7 @@ const DashBoard = () => {
         </div>
       ) : (
         <div className="grid gap-6 p-6 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 bg-gray-100">
-          {data.map(({ id, title, description, thumbnail }) => (
+          {filter.map(({ id, title, description, thumbnail }) => (
             <section
               key={id}
               className="bg-white rounded-2xl shadow-lg overflow-hidden transition-transform transform hover:scale-105"
@@ -80,6 +105,12 @@ const DashBoard = () => {
                   {description}
                 </p>
               </div>
+              <button
+                onClick={() => deleteProducts(id)}
+                className="py-2 px-4 rounded-xl text-white bg-red-700 flex justify-self-end mx-2 mb-2"
+              >
+                Delete
+              </button>
             </section>
           ))}
         </div>

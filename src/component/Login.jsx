@@ -1,9 +1,18 @@
 import React, { useContext } from "react";
 import { StoreContext } from "../context/StoreContext";
-
 const Login = () => {
-  const { handleChange, formData, handleSubmit, setCurrentState, navigate } =
-    useContext(StoreContext);
+  const {
+    handleSubmit2,
+    handleChange,
+    // formData,
+    values,
+    touched,
+    errors,
+    handleBlur,
+    handleSubmit,
+    setCurrentState,
+    navigate,
+  } = useContext(StoreContext);
 
   return (
     <div className="container flex justify-center items-center h-screen bg-gray-100">
@@ -26,21 +35,29 @@ const Login = () => {
             <input
               name="email"
               type="email"
-              value={formData.email}
+              onBlur={handleBlur}
+              value={values.email}
               onChange={handleChange}
               placeholder="Enter Your Email"
               className="input border border-gray-400 rounded-xl py-2 px-2 focus:outline-none placeholder:px-2 focus:ring-2 focus:ring-gray-500"
               required
             />
+            {errors.email && touched.email ? (
+              <p className="text-red-600 text-sm px-1">{errors.email}</p>
+            ) : null}
             <input
               name="password"
               type="password"
-              value={formData.password}
+              onBlur={handleBlur}
+              value={values.password}
               onChange={handleChange}
               placeholder="Enter Your Password"
               className="input border border-gray-400 rounded-xl px-2 py-2 focus:outline-none placeholder:px-2 focus:ring-2 focus:ring-gray-500"
               required
             />
+            {errors.password && touched.password ? (
+              <p className="text-red-600 text-sm px-1">{errors.password}</p>
+            ) : null}
             <div className="w-full flex justify-between text-sm text-gray-600">
               <p className="cursor-pointer hover:text-gray-900">
                 Forgot your password?
@@ -67,5 +84,4 @@ const Login = () => {
     </div>
   );
 };
-
 export default Login;

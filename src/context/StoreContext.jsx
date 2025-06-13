@@ -1,43 +1,40 @@
 import React, { createContext, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-
+import { v4 as uuidv4 } from "uuid";
+import { useFormik } from "formik";
+import { signUpSchema } from "../component/Validation";
 const StoreContext = createContext();
 
 const StoreContextProvider = ({ children }) => {
-  const [currentState, setCurrentState] = useState("Sign Up");
-  const [formData, setFormData] = useState({
+  const [currentState, setCurrentState] = useState("Login");
+  const initialValues = {
     name: "",
     email: "",
     password: "",
     confirmPassword: "",
     phone: "",
-  });
+  };
+  const { values, touched, handleChange, handleSubmit, errors, handleBlur } =
+    useFormik({
+      initialValues: initialValues,
+      validationSchema: signUpSchema,
+      onSubmit: (values, actions) => {
+        handleSubmit2(values);
+        actions.setSubmitting(false);
+      },
+    });
 
   const navigate = useNavigate();
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
+  const handleSubmit2 = (values) => {
     const users = JSON.parse(localStorage.getItem("users")) || [];
 
     if (currentState === "Sign Up") {
-      const { name, email, password, confirmPassword, phone } = formData;
+      const { name, email, password, confirmPassword, phone } = values;
 
       if (!name || !email || !password || !confirmPassword || !phone) {
         toast("All fields are required");
-        return;
-      }
-
-      if (password !== confirmPassword) {
-        toast("Passwords do not match");
         return;
       }
 
@@ -47,19 +44,23 @@ const StoreContextProvider = ({ children }) => {
         return;
       }
 
-      users.push({ name, email, password, phone });
+      users.push({ name, email, password, phone, id: uuidv4() });
       localStorage.setItem("users", JSON.stringify(users));
       toast.success("User registered successfully!");
       setCurrentState("Login");
       navigate("/login");
     } else {
-      const { email, password } = formData;
+      const { email, password } = values;
       const matchedUser = users.find(
         (u) => u.email === email && u.password === password
       );
 
       if (matchedUser) {
+        localStorage.clear();
+        localStorage.removeItem("loggedInUser");
+
         localStorage.setItem("loggedInUser", JSON.stringify(matchedUser));
+
         toast.success("Login successful!");
         navigate("/dashboard");
       } else {
@@ -67,16 +68,18 @@ const StoreContextProvider = ({ children }) => {
       }
     }
   };
-
   return (
     <StoreContext.Provider
       value={{
-        currentState,
-        setCurrentState,
-        formData,
-        setFormData,
+        values,
+        touched,
         handleChange,
         handleSubmit,
+        errors,
+        handleBlur,
+        currentState,
+        setCurrentState,
+        handleSubmit2,
         navigate,
       }}
     >
